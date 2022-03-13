@@ -1,0 +1,159 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: konakart
+    tier: db
+  name: kk-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: konakart
+      tier: db
+  template:
+    metadata:
+      labels:
+        app: konakart
+        tier: db
+    spec:
+      containers:
+      - image: vp914/kk_postgres
+        name: kk-postgres
+        env:
+        - name: POSTGRES_PASSWORD
+          value: mysecretpassword
+        - name: POSTGRES_USER
+          value: postgres
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: konakart
+    tier: db
+  name: kk-postgres
+spec:
+  ports:
+  - name: 5432-5432
+    port: 5432
+    protocol: TCP
+    targetPort: 5432
+  selector:
+    app: konakart
+    tier: db
+  type: NodePort
+status:
+  loadBalancer: {}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: konakart
+    tier: app
+  name: kk-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: konakart
+      tier: app
+  template:
+    metadata:
+      labels:
+        app: konakart
+        tier: app
+    spec:
+      volumes: 
+      - name: elastic-apm-agent 
+        emptyDir: {} 
+      - name: konakart-other-properties
+        emptyDir: {} 
+      initContainers: 
+      # java apm agent sidecar
+      - name: elastic-java-agent 
+        image: docker.elastic.co/observability/apm-agent-java:1.29.0 
+        volumeMounts: 
+        - mountPath: /elastic/apm/agent 
+          name: elastic-apm-agent 
+        command: ['cp', '-v', '/usr/agent/elastic-apm-agent.jar', '/elastic/apm/agent']
+      # other properties  
+      - name: konakart-other-properties 
+        image: vp914/kk_apm_props 
+        volumeMounts: 
+        - mountPath: /kk_props 
+          name: konakart-other-properties 
+        command: 
+        - /bin/sh
+        - -c
+        - cp -v /usr/agent-api/apm-agent-api.jar /kk_props/ && 
+          cp -v /usr/agent-rum/elastic-apm-rum.umd.min.js /kk_props/ &&
+          cp -v /usr/kk-properties/konakart-logging.xml /kk_props/ &&
+          cp -v /usr/kk-properties/MainLayout.jsp /kk_props/
+      containers:
+      - image: vp914/kk_java_apm_placeholder
+        name: kk-app
+        volumeMounts: 
+        - mountPath: /elastic/apm/agent 
+          name: elastic-apm-agent 
+        - mountPath: /kk_props
+          name: konakart-other-properties
+        command: 
+        - /bin/bash
+        - -c
+        - cp -v /kk_props/apm-agent-api.jar /konakart/webapps/konakart/WEB-INF/lib/ && 
+          cp -v /kk_props/elastic-apm-rum.umd.min.js /konakart/webapps/konakart/script/ &&
+          cp -v /kk_props/konakart-logging.xml /konakart/webapps/konakart/WEB-INF/classes/ &&
+          cp -v /kk_props/MainLayout.jsp /konakart/webapps/konakart/WEB-INF/jsp/ &&
+          /konakart/bin/startkonakart.sh && tail -F /konakart/logs/catalina.out /konakart/logs/KonaKart.log
+        ports:
+        - containerPort: 8780
+        env:
+          - name: DBHOST
+            value: kk-postgres
+          - name: DBPORT
+            value: "5432"
+          - name: DBUSER
+            value: konakart
+          - name: DBPWD
+            value: KonaPwd
+          - name: ELASTIC_APM_SERVER_URL 
+            value: "http://192.168.1.179:8200" 
+#          - name: ELASTIC_APM_SERVICE_NAME 
+#            value: "konakart" 
+          - name: ELASTIC_APM_APPLICATION_PACKAGES 
+            value: "com.konakart.*" 
+          - name: ELASTIC_APM_ENVIRONMENT 
+            value: test 
+          - name: ELASTIC_APM_LOG_LEVEL 
+            value: DEBUG 
+          - name: ELASTIC_AGENT_PATH
+            value: -javaagent:/elastic/apm/agent/elastic-apm-agent.jar
+          - name: ELASTIC_APM_VERIFY_SERVER_CERT
+            value: "false"
+#          - name: ELASTIC_APM_RUM_ENABLED
+#            value: "true"
+#          - name: ELASTIC_APM_DISTRIBUTED_TRACING_ENABLED
+#            value: "true"
+#          - name: MY_APP_URL
+#            value: "192.168.1.179:*"
+#          - name: ELASTIC_APM_LOG_ECS_REFORMATTING
+#            value: OVERRIDE
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kk-app
+  labels:
+    app: konakart
+    tier: app
+spec:
+  type: NodePort
+  ports:
+    - port: 8780
+  selector:
+    app: konakart
+    tier: app
