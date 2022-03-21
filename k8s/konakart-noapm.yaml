@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: konakart
+    tier: db
+  name: kk-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: konakart
+      tier: db
+  template:
+    metadata:
+      labels:
+        app: konakart
+        tier: db
+    spec:
+      containers:
+      - image: vp914/kk_postgres
+        name: kk-postgres
+        env:
+        - name: POSTGRES_PASSWORD
+          value: mysecretpassword
+        - name: POSTGRES_USER
+          value: postgres
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: konakart
+    tier: db
+  name: kk-postgres
+spec:
+  ports:
+  - name: 5432-5432
+    port: 5432
+    protocol: TCP
+    targetPort: 5432
+  selector:
+    app: konakart
+    tier: db
+  type: NodePort
+status:
+  loadBalancer: {}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: konakart
+    tier: app
+  name: kk-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: konakart
+      tier: app
+  template:
+    metadata:
+      labels:
+        app: konakart
+        tier: app
+    spec:
+      containers:
+      - image: vp914/kk_app_apm_placeholder
+        name: kk-app
+        ports:
+        - containerPort: 8780
+        env:
+          - name: DBHOST
+            value: kk-postgres
+          - name: DBPORT
+            value: "5432"
+          - name: DBUSER
+            value: konakart
+          - name: DBPWD
+            value: KonaPwd
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kk-app
+  labels:
+    app: konakart
+    tier: app
+spec:
+  type: NodePort
+  ports:
+    - port: 8780
+  selector:
+    app: konakart
+    tier: app

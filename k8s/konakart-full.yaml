@@ -73,7 +73,7 @@ spec:
       - name: konakart-other-properties
         emptyDir: {} 
       initContainers: 
-      # java apm agent sidecar
+      # java apm agent
       - name: elastic-java-agent 
         image: docker.elastic.co/observability/apm-agent-java:1.29.0 
         volumeMounts: 
@@ -82,7 +82,7 @@ spec:
         command: ['cp', '-v', '/usr/agent/elastic-apm-agent.jar', '/elastic/apm/agent']
       # other properties  
       - name: konakart-other-properties 
-        image: vp914/kk_apm_props 
+        image: vp914/kk_apm_other_props
         volumeMounts: 
         - mountPath: /kk_props 
           name: konakart-other-properties 
@@ -94,7 +94,7 @@ spec:
           cp -v /usr/kk-properties/konakart-logging.xml /kk_props/ &&
           cp -v /usr/kk-properties/MainLayout.jsp /kk_props/
       containers:
-      - image: vp914/kk_java_apm_placeholder
+      - image: vp914/kk_app_apm_placeholder
         name: kk-app
         volumeMounts: 
         - mountPath: /elastic/apm/agent 
@@ -108,7 +108,7 @@ spec:
           cp -v /kk_props/elastic-apm-rum.umd.min.js /konakart/webapps/konakart/script/ &&
           cp -v /kk_props/konakart-logging.xml /konakart/webapps/konakart/WEB-INF/classes/ &&
           cp -v /kk_props/MainLayout.jsp /konakart/webapps/konakart/WEB-INF/jsp/ &&
-          /konakart/bin/startkonakart.sh && tail -F /konakart/logs/catalina.out /konakart/logs/KonaKart.log
+          /bin/bash /entrypoint.sh
         ports:
         - containerPort: 8780
         env:
@@ -134,14 +134,16 @@ spec:
             value: -javaagent:/elastic/apm/agent/elastic-apm-agent.jar
           - name: ELASTIC_APM_VERIFY_SERVER_CERT
             value: "false"
-#          - name: ELASTIC_APM_RUM_ENABLED
-#            value: "true"
-#          - name: ELASTIC_APM_DISTRIBUTED_TRACING_ENABLED
-#            value: "true"
-#          - name: MY_APP_URL
-#            value: "192.168.1.179:*"
-#          - name: ELASTIC_APM_LOG_ECS_REFORMATTING
-#            value: OVERRIDE
+          - name: ELASTIC_APM_RUM_ENABLED
+            value: "true"
+          - name: ELASTIC_APM_DISTRIBUTED_TRACING_ENABLED
+            value: "true"
+          - name: MY_APP_URL
+            value: "192.168.1.179:*"
+          - name: ELASTIC_APM_LOG_ECS_REFORMATTING
+            value: OVERRIDE
+          #- name: ELASTIC_APM_ENVIRONMENT
+          #  value: test
 ---
 apiVersion: v1
 kind: Service

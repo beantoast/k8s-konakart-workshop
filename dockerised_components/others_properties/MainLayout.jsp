@@ -25,6 +25,7 @@
 <% String distributedTracing = System.getenv("ELASTIC_APM_DISTRIBUTED_TRACING_ENABLED"); %>
 <% String serverUrl = System.getenv("ELASTIC_APM_SERVER_URL"); %>
 <% String appUrl = System.getenv("MY_APP_URL"); %>
+<% String env = System.getenv("ELASTIC_APM_ENVIRONMENT"); %>
 <% com.konakart.al.KKAppEng kkEng = (com.konakart.al.KKAppEng) session.getAttribute("konakartKey");%>
 
  <%if (kkEng != null) {%>
@@ -51,19 +52,22 @@
     <% } else { %>
 		<html>
 			<head>
-		             <% if (enabledRum.equals("true")) { %>
+		    <% if (enabledRum.equals("true")) { %>
 				<script src="<%=kkEng.getScriptBase()%>/elastic-apm-rum.umd.min.js" crossorigin></script>
 				<script>
           elasticApm.init({
             serviceName: 'konakart-rum',
-					  serverUrl: '<%=serverUrl%>',
-					  distributedTracingOrigins: ['<%=appUrl%>']
-				<% if (distributedTracing != null && distributedTracing.equals("true")) { %>
+					  serverUrl: '<%=serverUrl%>'
+				 <% if (env != null) { %>
+						,environment: '<%=env%>'
+				 <% } %>
+				 <% if (distributedTracing != null && distributedTracing.equals("true")) { %>
 				  <%@ page import="co.elastic.apm.api.ElasticApm,co.elastic.apm.api.Transaction" %>
           <% Transaction transaction = ElasticApm.currentTransaction(); %>
-				    ,pageLoadTraceId: "<%=transaction.getTraceId()%>",
+					  ,distributedTracingOrigins: ['<%=appUrl%>'],
+				    pageLoadTraceId: "<%=transaction.getTraceId()%>",
             pageLoadSpanId: "<%=transaction.ensureParentId()%>"
-        <% } %>
+         <% } %>
           })
 				</script>
         <% } %>
