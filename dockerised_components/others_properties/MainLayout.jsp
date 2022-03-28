@@ -26,6 +26,11 @@
 <% String serverUrl = System.getenv("ELASTIC_APM_SERVER_URL"); %>
 <% String appUrl = System.getenv("MY_APP_URL"); %>
 <% String env = System.getenv("ELASTIC_APM_ENVIRONMENT"); %>
+<% String frontendSvc = System.getenv("MY_FRONTEND_SVC"); 
+   if(frontendSvc == null){
+		 frontendSvc = "konakart-rum";
+	 }
+%>
 <% com.konakart.al.KKAppEng kkEng = (com.konakart.al.KKAppEng) session.getAttribute("konakartKey");%>
 
  <%if (kkEng != null) {%>
@@ -56,7 +61,7 @@
 				<script src="<%=kkEng.getScriptBase()%>/elastic-apm-rum.umd.min.js" crossorigin></script>
 				<script>
           elasticApm.init({
-            serviceName: 'konakart-rum',
+            serviceName: '<%=frontendSvc%>',
 					  serverUrl: '<%=serverUrl%>'
 				 <% if (env != null) { %>
 						,environment: '<%=env%>'

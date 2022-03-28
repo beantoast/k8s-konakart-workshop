@@ -142,8 +142,8 @@ spec:
             value: "192.168.1.179:*"
           - name: ELASTIC_APM_LOG_ECS_REFORMATTING
             value: OVERRIDE
-          #- name: ELASTIC_APM_ENVIRONMENT
-          #  value: test
+          - name: MY_FRONTEND_SVC
+            value: konakart-rum-vu
 ---
 apiVersion: v1
 kind: Service
@@ -155,7 +155,14 @@ metadata:
 spec:
   type: NodePort
   ports:
-    - port: 8780
+  - name: 8780-8780
+    port: 8780
+    protocol: TCP
+    targetPort: 8780
+  - name: 8783-8783
+    port: 8783
+    protocol: TCP
+    targetPort: 8783
   selector:
     app: konakart
     tier: app

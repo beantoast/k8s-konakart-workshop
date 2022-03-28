@@ -122,7 +122,14 @@ metadata:
 spec:
   type: NodePort
   ports:
-    - port: 8780
+  - name: 8780-8780
+    port: 8780
+    protocol: TCP
+    targetPort: 8780
+  - name: 8783-8783
+    port: 8783
+    protocol: TCP
+    targetPort: 8783
   selector:
     app: konakart
     tier: app
