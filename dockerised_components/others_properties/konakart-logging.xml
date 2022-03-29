@@ -23,16 +23,16 @@
     <Loggers>
         <Logger name="com.konakart" level="DEBUG" additivity="false">
             <AppenderRef ref="STDOUT"/>
-            <!-- KonaKart File Logger
+            <!-- KonaKart File Logger-->
             <AppenderRef ref="FILE"/>
-            End of KonaKart File Logger -->
+            <!--End of KonaKart File Logger -->
          </Logger>
 
         <Logger name="com.konakartadmin" level="DEBUG" additivity="false">
             <AppenderRef ref="STDOUT"/>
-            <!-- KonaKart File Logger
+            <!-- KonaKart File Logger -->
             <AppenderRef ref="FILE"/>
-            End of KonaKart File Logger -->
+            <!-- End of KonaKart File Logger -->
         </Logger>
 
         <!-- KonaKart Persistence layer - Set to INFO to see the SQL (Set to TRACE to see more detail) -->

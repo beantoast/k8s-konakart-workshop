@@ -108,7 +108,8 @@ spec:
           cp -v /kk_props/elastic-apm-rum.umd.min.js /konakart/webapps/konakart/script/ &&
           cp -v /kk_props/konakart-logging.xml /konakart/webapps/konakart/WEB-INF/classes/ &&
           cp -v /kk_props/MainLayout.jsp /konakart/webapps/konakart/WEB-INF/jsp/ &&
-          /bin/bash /entrypoint.sh
+          /konakart/bin/startkonakart.sh && tail -F /konakart/logs/catalina.out /konakart/logs/KonaKart.log
+          # Overwrite entrypoint for log correlation demo purpose. Old command is          /bin/bash /entrypoint.sh
         ports:
         - containerPort: 8780
         env:
@@ -122,6 +123,8 @@ spec:
             value: KonaPwd
           - name: ELASTIC_APM_SERVER_URL 
             value: "http://192.168.1.179:8200" 
+          - name: ELASTIC_APM_SECRET_TOKEN
+            value: mysecrettoken
 #          - name: ELASTIC_APM_SERVICE_NAME 
 #            value: "konakart" 
           - name: ELASTIC_APM_APPLICATION_PACKAGES 
@@ -134,8 +137,8 @@ spec:
             value: -javaagent:/elastic/apm/agent/elastic-apm-agent.jar
           - name: ELASTIC_APM_VERIFY_SERVER_CERT
             value: "false"
-          - name: ELASTIC_APM_RUM_ENABLED
-            value: "true"
+#          - name: ELASTIC_APM_RUM_ENABLED
+#            value: "true"
           - name: ELASTIC_APM_DISTRIBUTED_TRACING_ENABLED
             value: "true"
           - name: MY_APP_URL
@@ -144,6 +147,8 @@ spec:
             value: OVERRIDE
           - name: MY_FRONTEND_SVC
             value: konakart-rum-vu
+          - name: ELASTIC_APM_ENABLE_LOG_CORRELATION
+            value: "true"
 ---
 apiVersion: v1
 kind: Service

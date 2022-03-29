@@ -57,7 +57,7 @@
     <% } else { %>
 		<html>
 			<head>
-		    <% if (enabledRum.equals("true")) { %>
+		    <% if (enabledRum != null && enabledRum.equals("true")) { %>
 				<script src="<%=kkEng.getScriptBase()%>/elastic-apm-rum.umd.min.js" crossorigin></script>
 				<script>
           elasticApm.init({
